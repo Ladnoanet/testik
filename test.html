@@ -15,42 +15,55 @@
 
     <script>
         const jsonUrl = "https://api.myjson.online/v1/records/def3a3ab-def7-41e3-a80d-472b1a87f2b8";
-
+        
         const usersContainer = document.querySelector('.users');
         const form = document.getElementById('registerForm');
         const usernameInput = document.getElementById('username');
 
-        // 1. Получаем текущих пользователей
+        // Загрузка списка пользователей
         async function loadUsers() {
-            const res = await fetch(jsonUrl);
-            const data = await res.json();
-            const users = data.data.users || [];
+            try {
+                const res = await fetch(jsonUrl);
+                const json = await res.json();
+                const users = json.data.users || [];
 
-            usersContainer.innerHTML = "<h3>Пользователи:</h3>" + 
-                users.map(user => `<div>👤 ${user}</div>`).join('');
+                usersContainer.innerHTML = "<h3>Пользователи:</h3>" +
+                    users.map(user => `<div>👤 ${user}</div>`).join('');
+            } catch (err) {
+                usersContainer.innerHTML = "<p>Ошибка загрузки данных</p>";
+                console.error("Ошибка при загрузке пользователей:", err);
+            }
         }
 
-        // 2. Добавляем нового пользователя
+        // Добавление пользователя
         async function addUser(newName) {
-            const res = await fetch(jsonUrl);
-            const json = await res.json();
-            const users = json.data.users || [];
+            try {
+                const res = await fetch(jsonUrl);
+                const json = await res.json();
+                const users = json.data.users || [];
 
-            users.push(newName); // Добавляем нового
+                users.push(newName);
 
-            // Отправляем обратно обновлённый список
-            await fetch(jsonUrl, {
-                method: "PUT",
-                headers: {
-                    "Content-Type": "application/json"
-                },
-                body: JSON.stringify({ users })
-            });
+                // Обновляем JSON на сервере
+                await fetch(jsonUrl, {
+                    method: "PUT",
+                    headers: {
+                        "Content-Type": "application/json"
+                    },
+                    body: JSON.stringify({
+                        data: {
+                            users: users
+                        }
+                    })
+                });
 
-            loadUsers(); // Обновляем на странице
+                loadUsers(); // обновляем интерфейс
+            } catch (err) {
+                console.error("Ошибка при добавлении пользователя:", err);
+            }
         }
 
-        // 3. Обработка формы
+        // Обработка формы
         form.addEventListener('submit', e => {
             e.preventDefault();
             const name = usernameInput.value.trim();
@@ -60,7 +73,7 @@
             }
         });
 
-        // Загрузка при старте
+        // При загрузке
         loadUsers();
     </script>
 </body>
