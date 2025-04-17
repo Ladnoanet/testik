@@ -1,0 +1,67 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>юзеры</title>
+</head>
+<body>
+    <form id="registerForm">
+        <input type="text" id="username" placeholder="Имя" required>
+        <input type="submit" value="Зарегаться">
+    </form>
+
+    <div class="users"></div>
+
+    <script>
+        const jsonUrl = "https://api.myjson.online/v1/records/def3a3ab-def7-41e3-a80d-472b1a87f2b8";
+
+        const usersContainer = document.querySelector('.users');
+        const form = document.getElementById('registerForm');
+        const usernameInput = document.getElementById('username');
+
+        // 1. Получаем текущих пользователей
+        async function loadUsers() {
+            const res = await fetch(jsonUrl);
+            const data = await res.json();
+            const users = data.data.users || [];
+
+            usersContainer.innerHTML = "<h3>Пользователи:</h3>" + 
+                users.map(user => `<div>👤 ${user}</div>`).join('');
+        }
+
+        // 2. Добавляем нового пользователя
+        async function addUser(newName) {
+            const res = await fetch(jsonUrl);
+            const json = await res.json();
+            const users = json.data.users || [];
+
+            users.push(newName); // Добавляем нового
+
+            // Отправляем обратно обновлённый список
+            await fetch(jsonUrl, {
+                method: "PUT",
+                headers: {
+                    "Content-Type": "application/json"
+                },
+                body: JSON.stringify({ users })
+            });
+
+            loadUsers(); // Обновляем на странице
+        }
+
+        // 3. Обработка формы
+        form.addEventListener('submit', e => {
+            e.preventDefault();
+            const name = usernameInput.value.trim();
+            if (name) {
+                addUser(name);
+                usernameInput.value = "";
+            }
+        });
+
+        // Загрузка при старте
+        loadUsers();
+    </script>
+</body>
+</html>
